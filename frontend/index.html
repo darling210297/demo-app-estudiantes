@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Productos</title>
+  <style>
+    :root {
+      --bg: #f5f6f8; --card: #ffffff; --text: #1d2330; --muted: #6b7280;
+      --accent: #b3121f; --ok: #15803d; --warn: #b45309; --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--accent); color: #fff; padding: 20px 16px; }
+    header h1 { margin: 0; font-size: 1.4rem; }
+    header p { margin: 4px 0 0; opacity: .85; font-size: .9rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+    .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+    input { padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; width: 120px; }
+    button { padding: 9px 14px; border: 0; border-radius: 8px; font-size: .95rem; cursor: pointer; background: var(--text); color: #fff; }
+    button.sec { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    button:disabled { opacity: .5; cursor: wait; }
+    .status { padding: 10px 14px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); margin-bottom: 16px; font-size: .9rem; }
+    .status.fast { border-left: 4px solid var(--ok); }
+    .status.slow { border-left: 4px solid var(--warn); }
+    .status.err  { border-left: 4px solid var(--accent); color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .card .cat { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .card h3 { margin: 6px 0; font-size: 1.05rem; }
+    .card .precio { font-weight: 700; font-size: 1.2rem; }
+    .card .id { color: var(--muted); font-size: .8rem; }
+    #log { margin-top: 24px; font-family: ui-monospace, monospace; font-size: .8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Catálogo de Productos</h1>
+  <p>ISWZ2202 · Frontend para la API Spring Boot (caché + proxy)</p>
+</header>
+
+<main>
+  <div class="bar">
+    <button id="btnListar">Listar todos</button>
+    <input id="inputId" type="number" min="1" placeholder="ID" value="1">
+    <button id="btnBuscar">Buscar por ID</button>
+    <button id="btnCache" class="sec">Limpiar caché</button>
+  </div>
+
+  <div id="status" class="status">Pulsa "Listar todos". La primera llamada tarda ~1.5 s; la segunda sale de la caché.</div>
+  <div id="resultado" class="grid"></div>
+  <div id="log"></div>
+</main>
+
+<script>
+  const API = 'http://localhost:8080/api';
+  const $ = (id) => document.getElementById(id);
+  const botones = ['btnListar', 'btnBuscar', 'btnCache'].map($);
+
+  function setStatus(texto, clase) {
+    const el = $('status');
+    el.textContent = texto;
+    el.className = 'status ' + (clase || '');
+  }
+
+  function log(texto) {
+    const linea = document.createElement('div');
+    linea.textContent = new Date().toLocaleTimeString() + '  ' + texto;
+    $('log').prepend(linea);
+  }
+
+  function render(productos) {
+    $('resultado').innerHTML = '';
+    productos.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="cat"></div><h3></h3>
+        <div class="precio"></div><div class="id"></div>`;
+      card.querySelector('.cat').textContent = p.categoria;
+      card.querySelector('h3').textContent = p.nombre;
+      card.querySelector('.precio').textContent = '$' + p.precio.toFixed(2);
+      card.querySelector('.id').textContent = 'ID ' + p.id;
+      $('resultado').appendChild(card);
+    });
+  }
+
+  async function llamar(metodo, ruta) {
+    botones.forEach(b => b.disabled = true);
+    setStatus('Cargando…');
+    const inicio = performance.now();
+    try {
+      const resp = await fetch(API + ruta, { method: metodo });
+      const ms = Math.round(performance.now() - inicio);
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.detail || ('HTTP ' + resp.status));
+      }
+      const datos = resp.status === 204 ? null : await resp.json();
+      const desdeCache = ms < 300;
+      log(`${metodo} ${ruta} → ${resp.status} en ${ms} ms`);
+      return { datos, ms, desdeCache };
+    } catch (e) {
+      // Un TypeError "Failed to fetch" suele ser CORS o backend apagado.
+      const msg = e instanceof TypeError
+        ? 'No se pudo conectar. ¿Está corriendo el backend en :8080? ¿El origen de esta página está permitido en CORS?'
+        : e.message;
+      setStatus('Error: ' + msg, 'err');
+      log(`${metodo} ${ruta} → ERROR: ${msg}`);
+      return null;
+    } finally {
+      botones.forEach(b => b.disabled = false);
+    }
+  }
+
+  function statusTiempo(r, que) {
+    setStatus(`${que} en ${r.ms} ms — ${r.desdeCache ? 'respuesta desde CACHÉ' : 'acceso a la fuente de datos (vía proxy)'}`,
+      r.desdeCache ? 'fast' : 'slow');
+  }
+
+  $('btnListar').onclick = async () => {
+    const r = await llamar('GET', '/productos');
+    if (r) { render(r.datos); statusTiempo(r, `${r.datos.length} productos`); }
+  };
+
+  $('btnBuscar').onclick = async () => {
+    const id = $('inputId').value;
+    const r = await llamar('GET', '/productos/' + encodeURIComponent(id));
+    if (r) { render([r.datos]); statusTiempo(r, `Producto ${id}`); }
+  };
+
+  $('btnCache').onclick = async () => {
+    const r = await llamar('DELETE', '/cache');
+    if (r) { $('resultado').innerHTML = ''; setStatus('Caché vaciada. La próxima llamada volverá a tardar ~1.5 s.'); }
+  };
+</script>
+</body>
+</html>

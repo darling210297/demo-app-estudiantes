@@ -1,0 +1,11 @@
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\config\CacheConfig.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\config\CorsConfig.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\controller\ProductoController.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\DemoApplication.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\exception\ManejadorGlobalErrores.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\exception\ProductoNoEncontradoException.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\model\Producto.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\repository\ProductoRepository.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\repository\ProductoRepositoryProxy.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\repository\RepositorioProductoEnMemoria.java
+C:\Users\tortiz\Downloads\demo-app-estudiantes\src\main\java\com\udla\arquitectura\demo\service\ProductoService.java

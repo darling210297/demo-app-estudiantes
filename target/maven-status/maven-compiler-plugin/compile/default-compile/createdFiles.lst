@@ -1,0 +1,11 @@
+com\udla\arquitectura\demo\DemoApplication.class
+com\udla\arquitectura\demo\model\Producto.class
+com\udla\arquitectura\demo\exception\ProductoNoEncontradoException.class
+com\udla\arquitectura\demo\config\CacheConfig.class
+com\udla\arquitectura\demo\exception\ManejadorGlobalErrores.class
+com\udla\arquitectura\demo\repository\RepositorioProductoEnMemoria.class
+com\udla\arquitectura\demo\repository\ProductoRepository.class
+com\udla\arquitectura\demo\repository\ProductoRepositoryProxy.class
+com\udla\arquitectura\demo\service\ProductoService.class
+com\udla\arquitectura\demo\config\CorsConfig.class
+com\udla\arquitectura\demo\controller\ProductoController.class
